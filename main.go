@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"gohequ/Model"
+	. "gohequ/Model"
 	"os"
 	"strings"
 )
@@ -16,6 +16,10 @@ func main() {
 	fmt.Println("2：主公别闹")
 	fmt.Println("3：摸金迷城")
 	fmt.Println("4：横扫三军")
+	fmt.Println("5：洪荒遗梦（莽荒纪）")
+	fmt.Println("6：魔幻西游")
+	fmt.Println("7：百劫成仙（青云降魔录）")
+	fmt.Println("8：魔灵修真")
 	fmt.Println("PS:正规GM手游盒子招代理微信：clzpb2002,有好游戏也可以联系我们合作。")
 	fmt.Println("当前版本：V1.0.1")
 	//	logrus.Warning("GM手游盒子招手游代理QQ：463046993")
@@ -27,13 +31,21 @@ func main() {
 
 	switch input {
 	case "1":
-		Model.ModelDqws()
+		ModelDqws()
 	case "2":
-		Model.ModelZmtx()
+		ModelZmtx()
 	case "3":
-		Model.Modelmjmc()
+		Modelmjmc()
 	case "4":
-		Model.ModelHssj()
+		ModelHssj()
+	case "6":
+		ModelMhxy()
+	case "5":
+		ModelHhym()
+	case "7":
+		ModelBjcx()
+	case "8":
+		ModelMlxz()
 	default:
 		fmt.Println("无效输入")
 	}
