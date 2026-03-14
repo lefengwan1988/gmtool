@@ -1,0 +1,56 @@
+# 二进制文件
+*.exe
+*.dll
+*.so
+*.dylib
+gmtool
+gmtool_linux
+gmtool.exe
+win_gmtool.exe
+linux_gmtool_linux
+bin/
+dist/
+
+# 测试文件
+*_test.go
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# 依赖目录
+vendor/
+
+# IDE 配置
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# 压缩包
+*.zip
+*.tar.gz
+*.rar
+
+# 配置文件（可选，根据需要调整）
+# config.ini
+
+# Go 相关
+go.work
+go.work.sum
+
+# 备份文件
+*.bak
+*.backup
+

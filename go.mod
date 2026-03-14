@@ -6,9 +6,10 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.19.0
+	github.com/yuin/gopher-lua v1.1.1
+	layeh.com/gopher-luar v1.0.11
 )
 
 require (
