@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-v2.1.0--Lua-blue.svg)](https://github.com/yourusername/gmtool)
+[![Version](https://img.shields.io/badge/version-v2.1.0--Lua-blue.svg)](https://github.com/lefengwan1988/gmtool)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.19-00ADD8.svg)](https://golang.org/)
 [![Lua](https://img.shields.io/badge/lua-5.1-000080.svg)](https://www.lua.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -59,7 +59,7 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/yourusername/gmtool.git
+git clone https://github.com/lefengwan1988/gmtool.git
 cd gmtool
 
 # 2. 编译项目
@@ -343,7 +343,7 @@ The Game Server Merge Tool is a professional merging solution based on a **Go + 
 
 ```bash
 # 1. Clone the project
-git clone https://github.com/yourusername/gmtool.git
+git clone https://github.com/lefengwan1988/gmtool.git
 cd gmtool
 
 # 2. Compile the project
