@@ -1,0 +1,157 @@
+{
+    "title": "真三国合区工具",
+    "describe": "数据库合并工具，用于多个库之间的合并",
+    "package_name": "com.lefengwan.zsg.hequ",
+    "version": "V1.0",
+    "state": "1",
+    "logo":"http://fun.api.6686.cn/img/zsg.jpg",
+    "author": "四川乐疯玩网络科技有限公司",
+    "script": {
+        "type": "2",
+        "simple_process": {
+            "deal_with": [],
+            "primary_key": []
+        },
+        "same": [{
+            "group": [{
+                "db_table": "player",
+                "db_field": "pid"
+            }, {
+                "db_table": "city",
+                "db_field": "pid"
+            }, {
+                "db_table": "wildteam",
+                "db_field": "pid"
+            }, {
+                "db_table": "charge_order",
+                "db_field": "pid"
+            }, {
+                "db_table": "offline_player_data",
+                "db_field": "pid"
+            }, {
+                "db_table": "will_award",
+                "db_field": "pid"
+            }]
+        }],
+        "other_identity": [{
+            "db_table": "wildteam",
+            "db_field": "id"
+        }, {
+            "db_table": "will_award",
+            "db_field": "uid"
+        }],
+        "special_option": {
+            "teshudb_field_open": "2",
+            "teshudb_field": []
+        },
+        "server_info": {
+            "server_is": "1",
+            "server_sql": [{
+                "db_table": "player",
+                "db_field": "serverID"
+            }]
+        },
+        "un_merge": [{
+            "db_table": "activity"
+        }, {
+            "db_table": "activityaward"
+        }, {
+            "db_table": "bi_msg"
+        }, {
+            "db_table": "cardkey"
+        }, {
+            "db_table": "cardnum"
+        }, {
+            "db_table": "cityfight"
+        }, {
+            "db_table": "country"
+        }, {
+            "db_table": "countrytask"
+        }, {
+            "db_table": "countryunion"
+        }, {
+            "db_table": "fightlog"
+        }, {
+            "db_table": "friends"
+        }, {
+            "db_table": "gift"
+        }, {
+            "db_table": "giftaward"
+        }, {
+            "db_table": "mail"
+        }, {
+            "db_table": "mail_fight"
+        }, {
+            "db_table": "mail_system"
+        }, {
+            "db_table": "open_server_act"
+        }, {
+            "db_table": "open_server_time"
+        }, {
+            "db_table": "personalshop"
+        }, {
+            "db_table": "ranks"
+        }, {
+            "db_table": "ranks_show"
+        }, {
+            "db_table": "saveoldtime"
+        }, {
+            "db_table": "uid"
+        }, {
+            "db_table": "world_fight"
+        }, {
+            "db_table": "worldcity"
+        }],
+        "prefix_setting": {
+            "role_is": "1",
+            "guild_is": "2",
+            "repeat_modify": "2",
+            "additional_string": "2",
+            "account_change": "1",
+            "prefix": "2s",
+            "account_suffix": "s2",
+            "account_table": [{
+                "db_table": "user",
+                "db_field": "uid"
+            }, {
+                "db_table": "user",
+                "db_field": "userName"
+            }, {
+                "db_table": "player",
+                "db_field": "uid"
+            }],
+            "role_name": [{
+                "db_table": "player",
+                "db_field": "name",
+                "not_equal": ""
+            }],
+            "guild_name": []
+        },
+        "empty_table": [],
+        "indexing_table": [],
+        "modify_table": [],
+        "master_server": "1",
+        "slave_server": "2"
+    },
+    "cleaning_tools": {
+        "state": "0",
+        "type": "2",
+        "group": "0",
+        "conditions": [],
+        "other": "1",
+        "level": "70",
+        "day": "15",
+        "cleaning_table": [],
+        "additional": [],
+        "all_clear": []
+    },
+    "sql_connection": {
+        "host": "127.0.0.1",
+        "port": "3306",
+        "username": "root",
+        "password": "root",
+        "db1": "s1",
+        "db2": "s2",
+        "coding": "SET NAMES gbk"
+    }
+}

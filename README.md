@@ -46,6 +46,9 @@
 | 9 | 魔灵修真 | `mlxz.lua` | ✅ |
 | 10 | 主公别闹 | `zmtx.lua` | ✅ |
 | 11 | 示例游戏 | `example.lua` | ✅ |
+| 🆕 | **通用合区工具** | `universal_merge.lua` | ✅ **新增** |
+
+> 💡 **通用合区工具**：支持读取易语言旧版 JSON 配置，兼容 20+ 款游戏，无需编写新脚本！详见 [通用合区工具说明](#-通用合区工具新增)
 
 ### 🚀 快速开始
 
@@ -263,6 +266,19 @@ local found = util.contains(array, value)
 
 -- 从字符串提取数字
 local number = util.extract_number("game123")
+
+-- 读取文件内容（新增）
+local content, err = util.read_file(filepath)
+```
+
+#### JSON API（新增）
+
+```lua
+-- 解析 JSON 字符串
+local data, err = json.decode(json_string)
+
+-- 编码为 JSON 字符串
+local json_str, err = json.encode(lua_table)
 ```
 
 #### UI API
@@ -271,6 +287,96 @@ local number = util.extract_number("game123")
 -- 显示进度条
 ui.progress(current, total, "正在处理...")
 ```
+
+### 🆕 通用合区工具（新增）
+
+#### 特性说明
+
+通用合区工具是一个**革命性的功能**，它能够：
+
+- ✅ **完全兼容**易语言旧版 JSON 配置格式
+- ✅ **零迁移成本**：直接使用现有的 20+ 个 JSON 配置文件
+- ✅ **三种合区类型**：支持 Type 1/2/3 所有合区模式
+- ✅ **智能处理**：自动 ID 偏移、前缀后缀、服务器 ID 更新
+- ✅ **高度可配置**：支持所有易语言版本的配置项
+
+#### 支持的游戏（通过 JSON 配置）
+
+在 `legacy_configs/script/` 目录下的所有游戏：
+
+| 游戏 | JSON 文件 | 类型 | 游戏 | JSON 文件 | 类型 |
+|-----|----------|------|-----|----------|------|
+| 攻城掠地 | gcld.json | Type 2 | 蛮荒记 | mhj.json | Type 3 |
+| 大侠无双 | djws.json | - | 龙OL | longol.json | - |
+| 梦幻江湖 | mhj.json | - | 神域之战 | syz.json | - |
+| 天下雄图 | txxt.json | - | 天域大陆 | tydl.json | - |
+| 武神之王 | wszw.json | - | 新火烧赤壁 | xhtsgs.json | - |
+
+...以及更多 20+ 款游戏！
+
+#### 快速使用
+
+**1. 配置数据库和合区参数**
+
+编辑 `lua_skills/universal_merge.lua`：
+
+```lua
+-- 数据库配置
+db_config = {
+    user = "root",
+    password = "root",
+    host = "127.0.0.1:3306",
+}
+
+-- 合区配置
+merge_config = {
+    main_server = "s1",           -- 主区数据库名
+    sub_servers = {"s2"},         -- 副区数据库名列表
+    json_script = "gcld.json",    -- 选择对应游戏的 JSON 配置
+}
+```
+
+**2. 运行工具**
+
+```bash
+./bin/gmtool.exe
+# 选择"通用合区工具"
+```
+
+**3. 查看详细文档**
+
+- 📖 [使用说明](legacy_configs/通用合区工具使用说明.md)
+- 🏗️ [架构说明](legacy_configs/通用合区工具架构说明.md)
+- 🚀 [快速配置向导](legacy_configs/快速配置向导.md)
+- 📊 [项目总结](legacy_configs/项目总结.md)
+
+#### 合区类型说明
+
+**Type 1: 简单合并**
+- 只处理 `other_identity` 字段
+- 适用于简单的数据合并场景
+
+**Type 2: 复杂合并**
+- 处理 `same` 组（相同字段组）
+- 处理 `other_identity` 字段
+- 支持 ID 重构和特殊字段处理
+- 适用于复杂的关联数据合并
+
+**Type 3: 简单处理**
+- 使用 `simple_process` 配置
+- 自动处理主键和关联字段
+- 适用于标准化的数据库结构
+
+#### 技术优势
+
+| 特性 | 易语言版本 | Go+Lua 通用工具 |
+|-----|----------|----------------|
+| 性能 | 一般 | ⚡ 高性能 |
+| 跨平台 | ❌ 仅 Windows | ✅ 全平台 |
+| 配置复用 | - | ✅ 完全兼容 |
+| 可维护性 | 低 | ✅ 高 |
+| 扩展性 | 低 | ✅ 高 |
+| 调试 | 困难 | ✅ 简单 |
 
 ### 🏗️ 项目结构
 
@@ -282,12 +388,22 @@ gmtool/
 │   └── root_lua.go
 ├── internal/               # 内部包
 │   ├── logger/            # 日志模块
-│   └── luaengine/         # Lua 引擎
+│   └── luaengine/         # Lua 引擎（已扩展 JSON API）
 ├── lua_skills/            # Lua 脚本目录
 │   ├── ald.lua
 │   ├── bjcx.lua
 │   ├── dqws.lua
+│   ├── universal_merge.lua  # 🆕 通用合区工具
 │   └── ...
+├── legacy_configs/         # 🆕 易语言配置和文档
+│   ├── script/            # JSON 配置文件目录（20+ 个游戏）
+│   │   ├── gcld.json     # 攻城掠地配置
+│   │   ├── mhj.json      # 蛮荒记配置
+│   │   └── ...
+│   ├── 通用合区工具使用说明.md      # 🆕 使用指南
+│   ├── 通用合区工具架构说明.md      # 🆕 架构文档
+│   ├── 快速配置向导.md              # 🆕 配置向导
+│   └── 项目总结.md                  # 🆕 项目总结
 ├── main_new.go            # 主程序入口
 ├── go.mod
 ├── go.sum

@@ -1,7 +1,11 @@
 package luaengine
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
@@ -80,6 +84,9 @@ func (e *LuaEngine) registerAPI() {
 
 	// 注册 UI API
 	e.registerUIAPI()
+
+	// 注册 JSON API
+	e.registerJSONAPI()
 }
 
 // registerUIAPI 注册 UI 相关 API
@@ -112,6 +119,27 @@ func (e *LuaEngine) registerUIAPI() {
 			fmt.Println()
 		}
 		return 0
+	}))
+
+	// ui.input(prompt) -> string
+	// 从标准输入读取一行用户输入，去除首尾空白后返回
+	e.L.SetField(uiTable, "input", e.L.NewFunction(func(L *lua.LState) int {
+		prompt := L.OptString(1, "")
+		if prompt != "" {
+			fmt.Print(prompt)
+		}
+
+		reader := bufio.NewReader(os.Stdin)
+		text, err := reader.ReadString('\n')
+		if err != nil {
+			// 读取失败时返回空字符串，交给 Lua 侧处理
+			L.Push(lua.LString(""))
+			return 1
+		}
+
+		text = strings.TrimSpace(text)
+		L.Push(lua.LString(text))
+		return 1
 	}))
 
 	e.L.SetGlobal("ui", uiTable)
@@ -282,5 +310,165 @@ func (e *LuaEngine) registerUtilAPI() {
 		return 1
 	}))
 
+	// util.read_file(filepath) - 读取文件内容
+	e.L.SetField(utilTable, "read_file", e.L.NewFunction(func(L *lua.LState) int {
+		filepath := L.CheckString(1)
+		content, err := os.ReadFile(filepath)
+		if err != nil {
+			L.Push(lua.LNil)
+			L.Push(lua.LString(err.Error()))
+			return 2
+		}
+		L.Push(lua.LString(string(content)))
+		return 1
+	}))
+
+	// util.list_files(dir, ext) - 列出目录下指定扩展名的文件
+	// dir: 目录路径，以 / 或 \ 结尾均可
+	// ext: 扩展名，例如 ".json"；为空则返回所有文件
+	e.L.SetField(utilTable, "list_files", e.L.NewFunction(func(L *lua.LState) int {
+		dir := L.CheckString(1)
+		ext := L.OptString(2, "")
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			L.Push(lua.LNil)
+			L.Push(lua.LString(err.Error()))
+			return 2
+		}
+
+		result := L.NewTable()
+		idx := 1
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			name := entry.Name()
+			if ext == "" || strings.HasSuffix(strings.ToLower(name), strings.ToLower(ext)) {
+				L.RawSetInt(result, idx, lua.LString(name))
+				idx++
+			}
+		}
+
+		L.Push(result)
+		return 1
+	}))
+
 	e.L.SetGlobal("util", utilTable)
+}
+
+// registerJSONAPI 注册 JSON API
+func (e *LuaEngine) registerJSONAPI() {
+	jsonTable := e.L.NewTable()
+
+	// json.decode(str) - 解析 JSON 字符串
+	e.L.SetField(jsonTable, "decode", e.L.NewFunction(func(L *lua.LState) int {
+		jsonStr := L.CheckString(1)
+
+		var data interface{}
+		if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+			L.Push(lua.LNil)
+			L.Push(lua.LString(err.Error()))
+			return 2
+		}
+
+		L.Push(e.goToLua(data))
+		return 1
+	}))
+
+	// json.encode(table) - 编码为 JSON 字符串
+	e.L.SetField(jsonTable, "encode", e.L.NewFunction(func(L *lua.LState) int {
+		value := L.CheckAny(1)
+
+		goValue := e.luaToGo(value)
+		jsonBytes, err := json.Marshal(goValue)
+		if err != nil {
+			L.Push(lua.LNil)
+			L.Push(lua.LString(err.Error()))
+			return 2
+		}
+
+		L.Push(lua.LString(string(jsonBytes)))
+		return 1
+	}))
+
+	e.L.SetGlobal("json", jsonTable)
+}
+
+// goToLua 将 Go 值转换为 Lua 值
+func (e *LuaEngine) goToLua(value interface{}) lua.LValue {
+	if value == nil {
+		return lua.LNil
+	}
+
+	switch v := value.(type) {
+	case bool:
+		return lua.LBool(v)
+	case float64:
+		return lua.LNumber(v)
+	case string:
+		return lua.LString(v)
+	case []interface{}:
+		tbl := e.L.NewTable()
+		for i, item := range v {
+			tbl.RawSetInt(i+1, e.goToLua(item))
+		}
+		return tbl
+	case map[string]interface{}:
+		tbl := e.L.NewTable()
+		for key, val := range v {
+			tbl.RawSetString(key, e.goToLua(val))
+		}
+		return tbl
+	default:
+		return lua.LString(fmt.Sprintf("%v", v))
+	}
+}
+
+// luaToGo 将 Lua 值转换为 Go 值
+func (e *LuaEngine) luaToGo(value lua.LValue) interface{} {
+	switch v := value.(type) {
+	case *lua.LNilType:
+		return nil
+	case lua.LBool:
+		return bool(v)
+	case lua.LNumber:
+		return float64(v)
+	case lua.LString:
+		return string(v)
+	case *lua.LTable:
+		// 检查是否为数组
+		maxN := 0
+		isArray := true
+		v.ForEach(func(key, val lua.LValue) {
+			if num, ok := key.(lua.LNumber); ok {
+				if int(num) == maxN+1 {
+					maxN = int(num)
+				} else {
+					isArray = false
+				}
+			} else {
+				isArray = false
+			}
+		})
+
+		if isArray && maxN > 0 {
+			arr := make([]interface{}, maxN)
+			for i := 1; i <= maxN; i++ {
+				arr[i-1] = e.luaToGo(v.RawGetInt(i))
+			}
+			return arr
+		}
+
+		// 作为对象处理
+		obj := make(map[string]interface{})
+		v.ForEach(func(key, val lua.LValue) {
+			if keyStr, ok := key.(lua.LString); ok {
+				obj[string(keyStr)] = e.luaToGo(val)
+			}
+		})
+		return obj
+	default:
+		return value.String()
+	}
 }

@@ -94,10 +94,32 @@ func RunLua() error {
 	if mergeConfigTable.Type() != lua.LTTable {
 		return fmt.Errorf("脚本缺少 merge_config 配置")
 	}
+	// 兼容两种配置形式：
+	// 1) 简单版：main_server = "game1", sub_servers = {"game2","game3"}
+	// 2) 通用版：main_server = { db_name="game1", server_id="1", ... }
+	//             sub_servers = { { db_name="game2", server_id="2", ... }, ... }
 
-	mainServer := tempEngine.L.GetField(mergeConfigTable, "main_server").String()
-	if mainServer == "" {
-		return fmt.Errorf("主区数据库名不能为空")
+	mainServerValue := tempEngine.L.GetField(mergeConfigTable, "main_server")
+	var mainServerDisplay string
+
+	if tbl, ok := mainServerValue.(*lua.LTable); ok {
+		// 通用合区工具风格
+		dbName := tempEngine.L.GetField(tbl, "db_name").String()
+		if dbName == "" {
+			return fmt.Errorf("主区数据库名不能为空")
+		}
+		serverID := tempEngine.L.GetField(tbl, "server_id").String()
+		if serverID != "" {
+			mainServerDisplay = fmt.Sprintf("%s (ID: %s)", dbName, serverID)
+		} else {
+			mainServerDisplay = dbName
+		}
+	} else {
+		// 其他脚本的简单字符串形式
+		mainServerDisplay = mainServerValue.String()
+		if mainServerDisplay == "" {
+			return fmt.Errorf("主区数据库名不能为空")
+		}
 	}
 
 	subServersTable := tempEngine.L.GetField(mergeConfigTable, "sub_servers")
@@ -105,23 +127,36 @@ func RunLua() error {
 		return fmt.Errorf("副区配置格式错误")
 	}
 
-	var subServers []string
+	var subServersDisplay []string
 	subServersTable.(*lua.LTable).ForEach(func(_, value lua.LValue) {
-		if str := value.String(); str != "" {
-			subServers = append(subServers, str)
+		if tbl, ok := value.(*lua.LTable); ok {
+			// 通用合区工具风格
+			dbName := tempEngine.L.GetField(tbl, "db_name").String()
+			if dbName == "" {
+				return
+			}
+			serverID := tempEngine.L.GetField(tbl, "server_id").String()
+			if serverID != "" {
+				subServersDisplay = append(subServersDisplay, fmt.Sprintf("%s (ID: %s)", dbName, serverID))
+			} else {
+				subServersDisplay = append(subServersDisplay, dbName)
+			}
+		} else if str := value.String(); str != "" {
+			// 其他脚本的简单字符串形式
+			subServersDisplay = append(subServersDisplay, str)
 		}
 	})
 
-	if len(subServers) == 0 {
+	if len(subServersDisplay) == 0 {
 		return fmt.Errorf("副区列表不能为空")
 	}
 
-	logrus.Infof("主区: %s", mainServer)
-	logrus.Infof("副区: %s", strings.Join(subServers, ", "))
+	logrus.Infof("主区: %s", mainServerDisplay)
+	logrus.Infof("副区: %s", strings.Join(subServersDisplay, ", "))
 	fmt.Println()
 
 	// 显示确认信息
-	showConfirmationLua(mainServer, subServers)
+	showConfirmationLua(mainServerDisplay, subServersDisplay)
 
 	fmt.Println("按回车键继续...")
 	fmt.Scanln()
