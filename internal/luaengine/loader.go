@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
 // SkillInfo Lua 技能信息
 type SkillInfo struct {
-	Name        string // 技能名称
-	Description string // 技能描述
-	FilePath    string // Lua 文件路径
+	Name        string    // 技能名称
+	Description string    // 技能描述
+	FilePath    string    // Lua 文件路径
+	ModTime     time.Time // 文件修改时间
 }
 
 // SkillLoader Lua 技能加载器
@@ -61,6 +64,12 @@ func (l *SkillLoader) LoadAll() error {
 
 // loadSkillInfo 加载单个技能的信息
 func (l *SkillLoader) loadSkillInfo(filepath string) error {
+	// 获取文件信息（包括修改时间）
+	fileInfo, err := os.Stat(filepath)
+	if err != nil {
+		return err
+	}
+
 	// 读取文件内容
 	content, err := os.ReadFile(filepath)
 	if err != nil {
@@ -88,6 +97,7 @@ func (l *SkillLoader) loadSkillInfo(filepath string) error {
 		Name:        name,
 		Description: description,
 		FilePath:    filepath,
+		ModTime:     fileInfo.ModTime(), // 保存修改时间
 	}
 
 	l.skills[name] = skill
@@ -104,12 +114,17 @@ func (l *SkillLoader) GetSkill(name string) (*SkillInfo, error) {
 	return skill, nil
 }
 
-// ListSkills 列出所有技能
+// ListSkills 列出所有技能（按修改时间排序）
 func (l *SkillLoader) ListSkills() []*SkillInfo {
 	skills := make([]*SkillInfo, 0, len(l.skills))
 	for _, skill := range l.skills {
 		skills = append(skills, skill)
 	}
+
+	// 按修改时间排序（最新的在前面）
+	sort.Slice(skills, func(i, j int) bool {
+		return skills[i].ModTime.After(skills[j].ModTime)
+	})
+
 	return skills
 }
-
